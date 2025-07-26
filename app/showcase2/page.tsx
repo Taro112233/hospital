@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bell, 
   Search, 
@@ -91,47 +91,86 @@ function StatefulUIPatternDemo() {
     }
   }, [state]);
 
+  // Animation variants
+  const cardVariants = {
+    empty: { opacity: 1, scale: 1, rotate: 0 },
+    loading: { opacity: 1, scale: 1.04, rotate: 2 },
+    error: {
+      opacity: 1,
+      scale: 1,
+      x: [0, -8, 8, -8, 8, 0],
+      transition: { type: 'tween' as const, duration: 0.5 }
+    },
+    success: { opacity: 1, scale: 1.08, rotate: -2 },
+  };
+
   return (
     <div>
       <div className="flex space-x-2 mb-4">
-        <button onClick={() => setState('empty')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='empty' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Empty</button>
-        <button onClick={() => setState('loading')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='loading' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Loading</button>
-        <button onClick={() => setState('error')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='error' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Error</button>
-        <button onClick={() => setState('success')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='success' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Success</button>
+        {(['empty', 'loading', 'error', 'success'] as const).map((s) => (
+          <motion.button
+            key={s}
+            onClick={() => setState(s)}
+            whileHover={{ scale: 1.08, boxShadow: '0 2px 8px #3b82f6' }}
+            whileTap={{ scale: 0.96 }}
+            className={`px-3 py-1 rounded-lg border text-sm font-medium capitalize transition-colors ${state===s ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+          >
+            {s}
+          </motion.button>
+        ))}
       </div>
-      <div className="border rounded-lg p-6 min-h-[120px] flex items-center justify-center bg-gray-50 dark:bg-gray-800 transition-colors">
+      <motion.div
+        key={state}
+        variants={cardVariants}
+        animate={state}
+        initial="empty"
+        transition={{ type: 'spring', duration: 0.5 }}
+        className="border rounded-lg p-6 min-h-[120px] flex items-center justify-center bg-gray-50 dark:bg-gray-800 transition-colors"
+      >
         {state === 'empty' && (
-          <div className="flex flex-col items-center text-gray-400 dark:text-gray-500">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-gray-400 dark:text-gray-500">
             <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M4 7V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1m-16 0v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7m-16 0h16m-8 4h.01m-.01 4h.01m-.01-2h.01"/></svg>
             <div className="mt-2 text-sm">ไม่มีข้อมูลในระบบ</div>
-          </div>
+          </motion.div>
         )}
         {state === 'loading' && (
-          <div className="flex flex-col items-center text-blue-400">
-            <svg className="animate-spin" width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/></svg>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-blue-400">
+            <motion.svg className="animate-spin" width="32" height="32" fill="none" viewBox="0 0 24 24" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/></motion.svg>
             <div className="mt-2 text-sm">กำลังโหลดข้อมูล...</div>
-          </div>
+          </motion.div>
         )}
         {state === 'error' && (
-          <div className="flex flex-col items-center text-red-400">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-red-400">
             <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2"/></svg>
             <div className="mt-2 text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
-            <button onClick={() => setState('loading')} className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium">ลองใหม่</button>
-          </div>
+            <motion.button
+              onClick={() => setState('loading')}
+              whileHover={{ scale: 1.08, backgroundColor: '#fecaca' }}
+              whileTap={{ scale: 0.96 }}
+              className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium"
+            >ลองใหม่</motion.button>
+          </motion.div>
         )}
         {state === 'success' && (
-          <div className="flex flex-col items-center text-green-500">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-green-500">
             <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
             <div className="mt-2 text-sm">โหลดข้อมูลสำเร็จ!</div>
-          </div>
+          </motion.div>
         )}
-      </div>
-      {showToast && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-fade-in">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
-          <span>โหลดข้อมูลสำเร็จ!</span>
-        </div>
-      )}
+      </motion.div>
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-fade-in"
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
+            <span>โหลดข้อมูลสำเร็จ!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -189,51 +228,82 @@ function RoleBasedUIDemo() {
     <div>
       <div className="flex space-x-2 mb-4">
         {(['admin', 'doctor', 'nurse', 'clerk'] as const).map((r) => (
-          <button
+          <motion.button
             key={r}
             onClick={() => setRole(r)}
+            whileHover={{ scale: 1.08, boxShadow: '0 2px 8px #3b82f6' }}
+            whileTap={{ scale: 0.96 }}
             className={`px-3 py-1 rounded-lg border text-sm font-medium capitalize ${role===r ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
           >
             {r}
-          </button>
+          </motion.button>
         ))}
       </div>
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar */}
-        <div className="w-full md:w-1/3 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+        <motion.div
+          key={role}
+          initial={{ x: -40, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: 'spring', duration: 0.5 }}
+          className="w-full md:w-1/3 bg-gray-100 dark:bg-gray-800 rounded-lg p-4"
+        >
           <div className="font-semibold mb-2">Sidebar ({role})</div>
-          <ul className="space-y-2">
+          <motion.ul
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+            className="space-y-2"
+          >
             {sidebarMenus[role].map((item, idx) => (
-              <li key={idx} className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+              <motion.li
+                key={idx}
+                whileHover={{ scale: 1.08, backgroundColor: '#e0e7ff' }}
+                className="flex items-center space-x-2 text-gray-700 dark:text-gray-200 rounded px-2 py-1 cursor-pointer"
+              >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
-              </li>
+              </motion.li>
             ))}
-          </ul>
-        </div>
+          </motion.ul>
+        </motion.div>
         {/* Dashboard Metrics */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <motion.div
+          key={role + '-metrics'}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', duration: 0.5 }}
+          className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
           {dashboardMetrics[role].map((metric, idx) => (
-            <div key={idx} className={`rounded-lg p-4 text-white shadow ${metric.color}`}>
+            <motion.div
+              key={idx}
+              whileHover={{ scale: 1.08, boxShadow: '0 2px 12px #3b82f6' }}
+              className={`rounded-lg p-4 text-white shadow ${metric.color} cursor-pointer`}
+            >
               <div className="text-xs mb-1 opacity-80">{metric.label}</div>
               <div className="text-2xl font-bold">{metric.value}</div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 }
 
 function FormValidationDemo() {
-  const { register, handleSubmit, formState: { errors, isSubmitSuccessful }, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitSuccessful }, reset, trigger } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: 'onTouched',
   });
 
+  const [submitting, setSubmitting] = React.useState(false);
+
   const onSubmit = (data: FormData) => {
+    setSubmitting(true);
     setTimeout(() => {
       reset();
+      setSubmitting(false);
     }, 2000);
   };
 
@@ -241,36 +311,60 @@ function FormValidationDemo() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ชื่อ <span className="text-red-500">*</span></label>
-        <input
+        <motion.input
           {...register('name')}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          onBlur={() => trigger('name')}
+          animate={errors.name ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
+          transition={errors.name ? { type: 'tween' as const, duration: 0.4 } : { type: 'spring', duration: 0.4 }}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
           placeholder="กรอกชื่อ"
         />
         {errors.name && <div className="text-xs text-red-500 mt-1">{errors.name.message}</div>}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">อีเมล <span className="text-red-500">*</span></label>
-        <input
+        <motion.input
           {...register('email')}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          onBlur={() => trigger('email')}
+          animate={errors.email ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
+          transition={errors.email ? { type: 'tween' as const, duration: 0.4 } : { type: 'spring', duration: 0.4 }}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
           placeholder="example@email.com"
         />
         {errors.email && <div className="text-xs text-red-500 mt-1">{errors.email.message}</div>}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">รหัสผ่าน <span className="text-red-500">*</span></label>
-        <input
+        <motion.input
           type="password"
           {...register('password')}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          onBlur={() => trigger('password')}
+          animate={errors.password ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
+          transition={errors.password ? { type: 'tween' as const, duration: 0.4 } : { type: 'spring', duration: 0.4 }}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
           placeholder="อย่างน้อย 6 ตัวอักษร"
         />
         {errors.password && <div className="text-xs text-red-500 mt-1">{errors.password.message}</div>}
       </div>
-      <button type="submit" className="w-full py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors">ส่งข้อมูล</button>
-      {isSubmitSuccessful && (
-        <div className="mt-2 text-green-600 dark:text-green-400 text-sm text-center">ส่งข้อมูลสำเร็จ!</div>
-      )}
+      <motion.button
+        type="submit"
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.96 }}
+        disabled={submitting}
+        className="w-full py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-60"
+      >
+        {submitting ? 'กำลังส่ง...' : 'ส่งข้อมูล'}
+      </motion.button>
+      <AnimatePresence>
+        {isSubmitSuccessful && !submitting && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-2 text-green-600 dark:text-green-400 text-sm text-center"
+          >ส่งข้อมูลสำเร็จ!</motion.div>
+        )}
+      </AnimatePresence>
     </form>
   );
 }
@@ -306,60 +400,84 @@ function AccessibilityDemo() {
   return (
     <div>
       <div className="flex space-x-2 mb-4">
-        <button
+        <motion.button
           className="px-4 py-2 bg-blue-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Open modal"
+          whileHover={{ scale: 1.08, boxShadow: '0 2px 8px #3b82f6' }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setModalOpen(true)}
         >
           เปิด Modal (Enter/Space)
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Icon button"
+          whileHover={{ scale: 1.13, rotate: 10 }}
+          whileTap={{ scale: 0.96 }}
         >
           <svg width="20" height="20" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/></svg>
-        </button>
+        </motion.button>
       </div>
       <div className="flex space-x-2">
-        <input
+        <motion.input
           className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           placeholder="Tab เพื่อเปลี่ยน focus"
+          whileFocus={{ scale: 1.04, boxShadow: '0 2px 8px #3b82f6' }}
         />
-        <button
+        <motion.button
           className="px-4 py-2 bg-green-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.96 }}
         >
           ปุ่มถัดไป
-        </button>
+        </motion.button>
       </div>
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" aria-modal="true" role="dialog">
-          <div
-            ref={modalRef}
-            className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-sm w-full shadow-lg outline-none"
-            tabIndex={-1}
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+            aria-modal="true"
+            role="dialog"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Modal ตัวอย่าง</h3>
-              <button
-                ref={closeBtnRef}
-                onClick={() => setModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                aria-label="Close modal"
-              >
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2"/></svg>
-              </button>
-            </div>
-            <div className="mb-4 text-gray-700 dark:text-gray-200">Modal นี้สามารถปิดด้วยปุ่ม Esc หรือคลิกปุ่มปิด</div>
-            <button
-              onClick={() => setModalOpen(false)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              aria-label="Close modal"
+            <motion.div
+              ref={modalRef}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.3 }}
+              className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-sm w-full shadow-lg outline-none"
+              tabIndex={-1}
             >
-              ปิด Modal
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Modal ตัวอย่าง</h3>
+                <motion.button
+                  ref={closeBtnRef}
+                  onClick={() => setModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  aria-label="Close modal"
+                  whileHover={{ scale: 1.13, rotate: 10 }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2"/></svg>
+                </motion.button>
+              </div>
+              <div className="mb-4 text-gray-700 dark:text-gray-200">Modal นี้สามารถปิดด้วยปุ่ม Esc หรือคลิกปุ่มปิด</div>
+              <motion.button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Close modal"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                ปิด Modal
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -387,31 +505,76 @@ function DataFetchingDemo() {
   }, []);
 
   return (
-    <div className="border rounded-lg p-6 min-h-[120px] bg-gray-50 dark:bg-gray-800 transition-colors">
+    <motion.div
+      className="border rounded-lg p-6 min-h-[120px] bg-gray-50 dark:bg-gray-800 transition-colors"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
       {state === 'loading' && (
-        <div className="flex items-center space-x-2 text-blue-500">
-          <svg className="animate-spin" width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/></svg>
+        <motion.div
+          className="flex items-center space-x-2 text-blue-500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.svg
+            className="animate-spin"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/>
+          </motion.svg>
           <span>กำลังโหลดข้อมูล...</span>
-        </div>
+        </motion.div>
       )}
       {state === 'error' && (
-        <div className="flex flex-col items-center text-red-500">
+        <motion.div
+          className="flex flex-col items-center text-red-500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, x: [0, -8, 8, -8, 8, 0] }}
+          transition={{ type: 'tween' as const, duration: 0.5 }}
+        >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2"/></svg>
           <div className="mt-2 text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
-          <button onClick={fetchData} className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium">ลองใหม่</button>
-        </div>
+          <motion.button
+            onClick={fetchData}
+            whileHover={{ scale: 1.08, backgroundColor: '#fecaca' }}
+            whileTap={{ scale: 0.96 }}
+            className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium"
+          >ลองใหม่</motion.button>
+        </motion.div>
       )}
       {state === 'success' && (
-        <ul className="space-y-2">
+        <motion.ul
+          className="space-y-2"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+        >
           {data.map((item, idx) => (
-            <li key={idx} className="p-2 rounded bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">{item}</li>
+            <motion.li
+              key={idx}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="p-2 rounded bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200"
+              whileHover={{ scale: 1.04, backgroundColor: '#e0e7ff' }}
+            >{item}</motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
       {state === 'idle' && (
-        <button onClick={fetchData} className="px-4 py-2 bg-blue-500 text-white rounded-lg">โหลดข้อมูล</button>
+        <motion.button
+          onClick={fetchData}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.96 }}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >โหลดข้อมูล</motion.button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -435,6 +598,15 @@ export default function ShowcasePage() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
+  // --- เพิ่ม state สำหรับ toast copy class name ---
+  const [copyToast, setCopyToast] = useState<{ show: boolean; text: string }>({ show: false, text: '' });
+
+  // --- ฟังก์ชัน copy class name ---
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopyToast({ show: true, text });
+    setTimeout(() => setCopyToast({ show: false, text: '' }), 1800);
+  };
 
   // Component showcase sections
   const showcaseSections = [
@@ -542,44 +714,45 @@ export default function ShowcasePage() {
                 <span className="ml-2 text-base font-normal text-gray-500 dark:text-gray-400">(Light / Dark Mode)</span>
               </h2>
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setTheme('light')}
-                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'light' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
-                  aria-label="Switch to light mode"
-                >
-                  Light
-                </button>
-                <button
-                  onClick={() => setTheme('dark')}
-                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'dark' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
-                  aria-label="Switch to dark mode"
-                >
-                  Dark
-                </button>
-                <button
-                  onClick={() => setTheme('system')}
-                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'system' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
-                  aria-label="Switch to system mode"
-                >
-                  System
-                </button>
+                {['light', 'dark', 'system'].map((t) => (
+                  <motion.button
+                    key={t}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setTheme(t)}
+                    className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === t ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+                    aria-label={`Switch to ${t} mode`}
+                  >
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </motion.button>
+                ))}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow">
+              <motion.div
+                whileHover={{ scale: 1.04, boxShadow: '0 4px 24px 0 rgba(59,130,246,0.12)' }}
+                className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow cursor-pointer"
+              >
                 <div className="font-semibold mb-2">Card Example</div>
                 <div className="text-sm">This card changes color based on the theme.</div>
-              </div>
-              <button className="p-4 rounded-lg bg-blue-500 text-white dark:bg-blue-400 dark:text-gray-900 font-semibold shadow transition-colors">
+              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.08, rotate: 2 }}
+                whileTap={{ scale: 0.96 }}
+                className="p-4 rounded-lg bg-blue-500 text-white dark:bg-blue-400 dark:text-gray-900 font-semibold shadow transition-colors"
+              >
                 Button Example
-              </button>
-              <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow">
+              </motion.button>
+              <motion.div
+                whileHover={{ scale: 1.04, boxShadow: '0 4px 24px 0 rgba(59,130,246,0.10)' }}
+                className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow cursor-pointer"
+              >
                 <span className="font-mono">Text Example</span>
                 <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">(Try switching theme!)</div>
-              </div>
+              </motion.div>
             </div>
             <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-              Components above will adapt their color scheme according to the selected theme.<br/>
+              Components above will adapt their color scheme according to the selected theme.<br />
               <span className="italic">(ใช้ next-themes + Tailwind dark mode class)</span>
             </div>
           </>
@@ -594,30 +767,35 @@ export default function ShowcasePage() {
       >
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Typography Showcase</h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">แสดงตัวอย่างระดับ heading, body, caption, code, quote เพื่อ set พื้นฐาน brand tone และ readability</p>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Heading 1 (h1)</h1>
-            <h2 className="text-3xl font-semibold mb-2">Heading 2 (h2)</h2>
-            <h3 className="text-2xl font-semibold mb-2">Heading 3 (h3)</h3>
-            <h4 className="text-xl font-semibold mb-2">Heading 4 (h4)</h4>
-            <h5 className="text-lg font-semibold mb-2">Heading 5 (h5)</h5>
-            <h6 className="text-base font-semibold mb-2">Heading 6 (h6)</h6>
-          </div>
-          <div>
-            <p className="text-base text-gray-800 dark:text-gray-200 mb-1">Body text: ข้อความปกติสำหรับเนื้อหาในระบบ</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Muted text: ใช้สำหรับข้อความรองหรืออธิบายเพิ่มเติม</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Caption: ใช้สำหรับคำอธิบายสั้น ๆ หรือ label</p>
-          </div>
-          <div>
+        <motion.div
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+          initial="hidden"
+          animate="visible"
+          className="space-y-6"
+        >
+          <motion.div>
+            <motion.h1 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-6xl">Heading 1 (h1)</motion.h1>
+            <motion.h2 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-5xl">Heading 2 (h2)</motion.h2>
+            <motion.h3 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-4xl">Heading 3 (h3)</motion.h3>
+            <motion.h4 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-3xl">Heading 4 (h4)</motion.h4>
+            <motion.h5 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-2xl">Heading 5 (h5)</motion.h5>
+            <motion.h6 whileHover={{ scale: 1.06, color: '#3b82f6' }} className="mb-2 text-gray-900 dark:text-white font-bold text-xl">Heading 6 (h6)</motion.h6>
+          </motion.div>
+          <motion.div>
+            <motion.p whileHover={{ scale: 1.03, color: '#0ea5e9' }} className="text-base text-gray-800 dark:text-gray-200 mb-1">Body text: ข้อความปกติสำหรับเนื้อหาในระบบ</motion.p>
+            <motion.p whileHover={{ scale: 1.03, color: '#64748b' }} className="text-sm text-gray-500 dark:text-gray-400 mb-1">Muted text: ใช้สำหรับข้อความรองหรืออธิบายเพิ่มเติม</motion.p>
+            <motion.p whileHover={{ scale: 1.03, color: '#a3a3a3' }} className="text-xs text-gray-400 dark:text-gray-500 mb-1">Caption: ใช้สำหรับคำอธิบายสั้น ๆ หรือ label</motion.p>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.06, boxShadow: '0 2px 12px 0 #3b82f6' }} className="inline-block">
             <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm text-blue-600 dark:text-blue-400">code block: const x = 42;</span>
-          </div>
-          <div>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.04, backgroundColor: '#e0e7ff' }}>
             <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-950/30 py-2 rounded">
-              "Design is not just what it looks like and feels like. Design is how it works."<br/>
+              "Design is not just what it looks like and feels like. Design is how it works."<br />
               <span className="block text-xs text-gray-400 mt-1">— Steve Jobs</span>
             </blockquote>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
           <ul className="list-disc ml-6 space-y-1">
             <li>ใช้ Tailwind class เช่น <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-base</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-muted-foreground</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">font-mono</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">italic</code></li>
@@ -641,10 +819,14 @@ export default function ShowcasePage() {
             <h3 className="text-lg font-semibold mb-2">Baseline Spacing</h3>
             <div className="flex flex-wrap gap-4 items-end">
               {[2, 4, 6, 8, 12].map((n) => (
-                <div key={n} className={`bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded flex flex-col items-center justify-end`}>
+                <motion.div
+                  key={n}
+                  whileHover={{ scale: 1.08, backgroundColor: '#bae6fd' }}
+                  className={`bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded flex flex-col items-center justify-end cursor-pointer`}
+                >
                   <div className={`w-12`} style={{ height: `${n * 4}px` }} />
                   <span className="text-xs mt-1">p-{n} ({n*4}px)</span>
-                </div>
+                </motion.div>
               ))}
             </div>
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">ควรใช้ p-4, p-6, p-8 เป็น baseline spacing สำหรับกล่อง/section</div>
@@ -652,23 +834,41 @@ export default function ShowcasePage() {
           {/* Grid & Gap Example */}
           <div>
             <h3 className="text-lg font-semibold mb-2">Grid & Gap Example</h3>
-            <div className="grid grid-cols-3 gap-4 mb-2">
+            <motion.div className="grid grid-cols-3 gap-4 mb-2">
               {[1,2,3].map((i) => (
-                <div key={i} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center">Box {i}</div>
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.08, backgroundColor: '#bbf7d0' }}
+                  className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center cursor-pointer"
+                >Box {i}</motion.div>
               ))}
-            </div>
-            <div className="grid grid-cols-3 gap-8 mb-2">
+            </motion.div>
+            <motion.div className="grid grid-cols-3 gap-8 mb-2">
               {[1,2,3].map((i) => (
-                <div key={i} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center">Box {i}</div>
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.08, backgroundColor: '#bbf7d0' }}
+                  className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center cursor-pointer"
+                >Box {i}</motion.div>
               ))}
-            </div>
+            </motion.div>
             <div className="flex space-x-4 mb-2">
-              <div className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded p-4">gap-x-4</div>
-              <div className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded p-4">gap-x-4</div>
+              {[1,2].map((i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.08, backgroundColor: '#f3e8ff' }}
+                  className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded p-4 cursor-pointer"
+                >gap-x-4</motion.div>
+              ))}
             </div>
             <div className="flex flex-col space-y-4">
-              <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded p-4">gap-y-4</div>
-              <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded p-4">gap-y-4</div>
+              {[1,2].map((i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.08, backgroundColor: '#fef9c3' }}
+                  className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded p-4 cursor-pointer"
+                >gap-y-4</motion.div>
+              ))}
             </div>
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">ใช้ <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">gap-4</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">gap-8</code> เพื่อความสม่ำเสมอใน layout</div>
           </div>
@@ -677,7 +877,11 @@ export default function ShowcasePage() {
             <h3 className="text-lg font-semibold mb-2">Margin Example</h3>
             <div className="flex items-end space-x-6">
               {[2, 4, 8].map((n) => (
-                <div key={n} className={`bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 rounded p-4 mb-${n}`}>mb-{n}</div>
+                <motion.div
+                  key={n}
+                  whileHover={{ y: -8, backgroundColor: '#fbcfe8' }}
+                  className={`bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 rounded p-4 mb-${n} cursor-pointer`}
+                >mb-{n}</motion.div>
               ))}
             </div>
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">margin (m, mb, mt, mx, my) ใช้สำหรับเว้นระยะระหว่างกล่อง/section</div>
@@ -702,69 +906,79 @@ export default function ShowcasePage() {
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">สีหลัก (primary, accent, muted, foreground) และสีสถานะ (success, error, warning, info) สำหรับการเลือกใช้ class ให้ถูกต้องตาม brand</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {/* Main Colors */}
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-blue-500 mb-2 border-4 border-blue-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Primary</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-blue-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-purple-500 mb-2 border-4 border-purple-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Accent</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-purple-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mb-2 border-4 border-gray-300 dark:border-gray-600" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Muted</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-gray-200</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 mb-2 border-4 border-gray-200 dark:border-gray-700" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Foreground</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-white</code>
-          </div>
+          {[
+            { color: 'bg-blue-500', border: 'border-blue-200', label: 'Primary' },
+            { color: 'bg-purple-500', border: 'border-purple-200', label: 'Accent' },
+            { color: 'bg-gray-200 dark:bg-gray-700', border: 'border-gray-300 dark:border-gray-600', label: 'Muted' },
+            { color: 'bg-white dark:bg-gray-900', border: 'border-gray-200 dark:border-gray-700', label: 'Foreground' },
+          ].map((c, i) => (
+            <motion.div
+              key={c.label}
+              whileHover={{ scale: 1.13, boxShadow: '0 0 0 4px #3b82f6' }}
+              onClick={() => handleCopy(c.color)}
+              className={`flex flex-col items-center cursor-pointer group`}
+              title="Click to copy class name"
+            >
+              <div className={`w-12 h-12 rounded-full ${c.color} mb-2 border-4 ${c.border} group-hover:ring-2 group-hover:ring-blue-400 transition-all`} />
+              <span className="text-xs text-gray-700 dark:text-gray-200">{c.label}</span>
+              <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">{c.color}</code>
+            </motion.div>
+          ))}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {/* Status Colors */}
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-green-500 mb-2 border-4 border-green-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Success</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-green-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-red-500 mb-2 border-4 border-red-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Error</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-red-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-yellow-400 mb-2 border-4 border-yellow-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Warning</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-yellow-400</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-blue-400 mb-2 border-4 border-blue-200" />
-            <span className="text-xs text-gray-700 dark:text-gray-200">Info</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-blue-400</code>
-          </div>
+          {[
+            { color: 'bg-green-500', border: 'border-green-200', label: 'Success' },
+            { color: 'bg-red-500', border: 'border-red-200', label: 'Error' },
+            { color: 'bg-yellow-400', border: 'border-yellow-200', label: 'Warning' },
+            { color: 'bg-blue-400', border: 'border-blue-200', label: 'Info' },
+          ].map((c, i) => (
+            <motion.div
+              key={c.label}
+              whileHover={{ scale: 1.13, boxShadow: '0 0 0 4px #3b82f6' }}
+              onClick={() => handleCopy(c.color)}
+              className={`flex flex-col items-center cursor-pointer group`}
+              title="Click to copy class name"
+            >
+              <div className={`w-12 h-12 rounded-full ${c.color} mb-2 border-4 ${c.border} group-hover:ring-2 group-hover:ring-blue-400 transition-all`} />
+              <span className="text-xs text-gray-700 dark:text-gray-200">{c.label}</span>
+              <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">{c.color}</code>
+            </motion.div>
+          ))}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {/* Text Colors */}
-          <div className="flex flex-col items-center">
-            <span className="text-blue-500 font-semibold">text-blue-500</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-blue-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-green-500 font-semibold">text-green-500</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-green-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-red-500 font-semibold">text-red-500</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-red-500</code>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-gray-500 font-semibold">text-gray-500</span>
-            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-gray-500</code>
-          </div>
+          {[
+            { color: 'text-blue-500', label: 'text-blue-500' },
+            { color: 'text-green-500', label: 'text-green-500' },
+            { color: 'text-red-500', label: 'text-red-500' },
+            { color: 'text-gray-500', label: 'text-gray-500' },
+          ].map((c, i) => (
+            <motion.div
+              key={c.label}
+              whileHover={{ scale: 1.13, backgroundColor: '#f1f5f9' }}
+              onClick={() => handleCopy(c.color)}
+              className="flex flex-col items-center cursor-pointer group"
+              title="Click to copy class name"
+            >
+              <span className={`${c.color} font-semibold`}>{c.label}</span>
+              <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">{c.color}</code>
+            </motion.div>
+          ))}
         </div>
+        <AnimatePresence>
+          {copyToast.show && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-fade-in"
+            >
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
+              <span>Copied: <span className="font-mono">{copyToast.text}</span></span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
           <ul className="list-disc ml-6 space-y-1">
             <li>ใช้ class <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">bg-*</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-*</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">border-*</code> ให้ตรงกับ brand</li>
@@ -877,11 +1091,11 @@ export default function ShowcasePage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
         {/* Page Title */}
-        <motion.section variants={itemVariants} className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <motion.section variants={itemVariants} className="mb-12 text-center dark:bg-gray-900 dark:text-gray-100">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Hospital Information System
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Component Showcase สำหรับระบบบริหารจัดการโรงพยาบาล
             <br />
             ออกแบบด้วย Next.js, React, TailwindCSS, Shadcn UI และ Framer Motion
@@ -889,7 +1103,7 @@ export default function ShowcasePage() {
         </motion.section>
 
         {/* Navigation Menu */}
-        <motion.nav variants={itemVariants} className="mb-12">
+        <motion.nav variants={itemVariants} className="mb-12 dark:bg-gray-900">
           <div className="flex flex-wrap justify-center gap-4">
             {showcaseSections.map((section) => (
               <motion.a
@@ -907,9 +1121,9 @@ export default function ShowcasePage() {
         </motion.nav>
 
         {/* Section 1: Layout & Navigation */}
-        <motion.section id="layout" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+        <motion.section id="layout" variants={itemVariants} className="mb-16 dark:bg-gray-900 dark:text-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
                 <Menu className="w-5 h-5 text-white" />
               </div>
@@ -924,7 +1138,7 @@ export default function ShowcasePage() {
                   <motion.div 
                     initial={{ x: -100 }}
                     animate={{ x: sidebarOpen ? 0 : -100 }}
-                    className="w-64 bg-gray-900 text-white rounded-lg p-4 space-y-2"
+                    className="w-64 bg-gray-900 dark:bg-gray-800 text-white rounded-lg p-4 space-y-2"
                   >
                     <div className="flex items-center space-x-2 p-2">
                       <Activity className="w-5 h-5" />
@@ -940,7 +1154,7 @@ export default function ShowcasePage() {
                       <motion.div
                         key={index}
                         whileHover={{ x: 4 }}
-                        className="flex items-center space-x-2 p-2 rounded hover:bg-gray-800 cursor-pointer"
+                        className="flex items-center space-x-2 p-2 rounded hover:bg-gray-800 dark:hover:bg-gray-700 cursor-pointer"
                       >
                         <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>
@@ -961,7 +1175,7 @@ export default function ShowcasePage() {
               {/* Tabs */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Tabs</h3>
-                <div className="border rounded-lg p-4">
+                <div className="border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
                   <div className="flex space-x-1 mb-4">
                     {['overview', 'patients', 'reports'].map((tab) => (
                       <motion.button
@@ -972,14 +1186,14 @@ export default function ShowcasePage() {
                         className={`px-4 py-2 rounded-lg font-medium ${
                           activeTab === tab
                             ? 'bg-blue-500 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700'
                         }`}
                       >
                         {tab === 'overview' ? 'ภาพรวม' : tab === 'patients' ? 'ผู้ป่วย' : 'รายงาน'}
                       </motion.button>
                     ))}
                   </div>
-                  <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                     {activeTab === 'overview' && <p>ข้อมูลภาพรวมของระบบ</p>}
                     {activeTab === 'patients' && <p>รายการผู้ป่วยทั้งหมด</p>}
                     {activeTab === 'reports' && <p>รายงานสถิติต่าง ๆ</p>}
@@ -990,12 +1204,12 @@ export default function ShowcasePage() {
               {/* Breadcrumb */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Breadcrumb</h3>
-                <nav className="flex items-center space-x-2 text-sm text-gray-600">
+                <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                   <a href="#" className="hover:text-blue-500">หน้าหลัก</a>
                   <ChevronRight className="w-4 h-4" />
                   <a href="#" className="hover:text-blue-500">ผู้ป่วย</a>
                   <ChevronRight className="w-4 h-4" />
-                  <span className="text-gray-900 font-medium">รายละเอียดผู้ป่วย</span>
+                  <span className="text-gray-900 dark:text-white font-medium">รายละเอียดผู้ป่วย</span>
                 </nav>
               </div>
 
@@ -1008,12 +1222,12 @@ export default function ShowcasePage() {
                     { id: 'medical', title: 'ประวัติการรักษา', content: 'การรักษาครั้งที่ผ่านมา' },
                     { id: 'insurance', title: 'ข้อมูลการประกัน', content: 'ประกันสังคม, ประกันสุขภาพ' }
                   ].map((item) => (
-                    <div key={item.id} className="border rounded-lg">
+                    <div key={item.id} className="border rounded-lg dark:bg-gray-800 dark:border-gray-700">
                       <motion.button
                         whileHover={{ backgroundColor: '#f8fafc' }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setAccordionOpen(accordionOpen === item.id ? '' : item.id)}
-                        className="w-full flex items-center justify-between p-4 text-left"
+                        className="w-full flex items-center justify-between p-4 text-left dark:text-gray-100"
                       >
                         <span className="font-medium">{item.title}</span>
                         <motion.div
@@ -1030,7 +1244,7 @@ export default function ShowcasePage() {
                         }}
                         style={{ overflow: 'hidden' }}
                       >
-                        <div className="p-4 pt-0 text-gray-600">
+                        <div className="p-4 pt-0 text-gray-600 dark:text-gray-300">
                           {item.content}
                         </div>
                       </motion.div>
@@ -1044,8 +1258,8 @@ export default function ShowcasePage() {
 
         {/* Section 2: Input & Form */}
         <motion.section id="forms" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
                 <Edit className="w-5 h-5 text-white" />
               </div>
@@ -1058,7 +1272,7 @@ export default function ShowcasePage() {
                 <h3 className="text-lg font-semibold">Input & Textarea</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ป่วย</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ชื่อผู้ป่วย</label>
                     <input
                       type="text"
                       value={inputValue}
@@ -1068,7 +1282,7 @@ export default function ShowcasePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">อาการ</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">อาการ</label>
                     <textarea
                       placeholder="อธิบายอาการ..."
                       rows={3}
@@ -1083,7 +1297,7 @@ export default function ShowcasePage() {
                 <h3 className="text-lg font-semibold">Select</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">แผนก</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">แผนก</label>
                     <select
                       value={selectValue}
                       onChange={(e) => setSelectValue(e.target.value)}
@@ -1132,7 +1346,7 @@ export default function ShowcasePage() {
                     </label>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">เพศ</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">เพศ</p>
                     <label className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -1164,7 +1378,7 @@ export default function ShowcasePage() {
                 <h3 className="text-lg font-semibold">Switch</h3>
                 <div className="space-y-3">
                   <label className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">รับการแจ้งเตือน</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">รับการแจ้งเตือน</span>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setSwitchOn(!switchOn)}
@@ -1174,7 +1388,7 @@ export default function ShowcasePage() {
                     >
                       <motion.span
                         animate={{ x: switchOn ? 20 : 2 }}
-                        className="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                        className="inline-block h-4 w-4 transform rounded-full bg-white dark:bg-gray-900 shadow transition-transform"
                       />
                     </motion.button>
                   </label>
@@ -1186,8 +1400,8 @@ export default function ShowcasePage() {
 
         {/* Section 3: Display */}
         <motion.section id="display" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg flex items-center justify-center mr-3">
                 <Eye className="w-5 h-5 text-white" />
               </div>
@@ -1230,12 +1444,12 @@ export default function ShowcasePage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Table</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full border border-gray-200 rounded-lg">
-                    <thead className="bg-gray-50">
+                  <table className="w-full border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">ชื่อ</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">แผนก</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">สถานะ</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อ</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">แผนก</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300">สถานะ</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1245,15 +1459,15 @@ export default function ShowcasePage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="border-t hover:bg-gray-50"
+                          className="border-t hover:bg-gray-50 dark:bg-gray-900"
                         >
-                          <td className="px-4 py-2 text-sm">{patient.name}</td>
-                          <td className="px-4 py-2 text-sm">{patient.department}</td>
+                          <td className="px-4 py-2 text-sm dark:text-gray-200">{patient.name}</td>
+                          <td className="px-4 py-2 text-sm dark:text-gray-200">{patient.department}</td>
                           <td className="px-4 py-2">
                             <span className={`px-2 py-1 text-xs rounded-full ${
                               patient.status === 'active' ? 'bg-green-100 text-green-800' :
                               patient.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
+                              'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
                             }`}>
                               {patient.status === 'active' ? 'กำลังรักษา' :
                                patient.status === 'waiting' ? 'รอคิว' : 'เสร็จสิ้น'}
@@ -1277,7 +1491,7 @@ export default function ShowcasePage() {
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">หายแล้ว</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm dark:text-gray-200">
                       <span>ความคืบหน้าการรักษา</span>
                       <span>{progress}%</span>
                     </div>
@@ -1318,10 +1532,10 @@ export default function ShowcasePage() {
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="absolute top-full mt-2 left-0 bg-white border rounded-lg shadow-lg p-4 w-64 z-10"
+                        className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-900 border rounded-lg shadow-lg p-4 w-64 z-10"
                       >
                         <h4 className="font-medium mb-2">ข้อมูลเพิ่มเติม</h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           นี่คือตัวอย่าง Popover ที่แสดงข้อมูลเพิ่มเติม
                         </p>
                       </motion.div>
@@ -1342,36 +1556,36 @@ export default function ShowcasePage() {
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                  className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">ข้อมูลผู้ป่วย</h3>
                     <button
                       onClick={() => setShowModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
-                      <p className="text-sm text-gray-900">นายสมชาย ใจดี</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อ-นามสกุล</label>
+                      <p className="text-sm text-gray-900 dark:text-white">นายสมชาย ใจดี</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">อายุ</label>
-                      <p className="text-sm text-gray-900">45 ปี</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">อายุ</label>
+                      <p className="text-sm text-gray-900 dark:text-white">45 ปี</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">แผนก</label>
-                      <p className="text-sm text-gray-900">อายุรกรรม</p>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">แผนก</label>
+                      <p className="text-sm text-gray-900 dark:text-white">อายุรกรรม</p>
                     </div>
                   </div>
                   <div className="flex justify-end space-x-2 mt-6">
                     <button
                       onClick={() => setShowModal(false)}
-                      className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                      className="px-4 py-2 text-gray-600 dark:text-gray-300 border rounded-lg hover:bg-gray-50 dark:bg-gray-900"
                     >
                       ปิด
                     </button>
@@ -1387,8 +1601,8 @@ export default function ShowcasePage() {
 
         {/* Section 4: Action & Feedback */}
         <motion.section id="actions" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-3">
                 <Activity className="w-5 h-5 text-white" />
               </div>
@@ -1445,7 +1659,7 @@ export default function ShowcasePage() {
                     className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg"
                   >
                     <Info className="w-5 h-5 text-blue-500" />
-                    <span className="text-blue-800 text-sm">ข้อมูลทั่วไป: ระบบทำงานปกติ</span>
+                    <span className="text-blue-800 text-sm dark:text-gray-200">ข้อมูลทั่วไป: ระบบทำงานปกติ</span>
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -1454,7 +1668,7 @@ export default function ShowcasePage() {
                     className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg"
                   >
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-green-800 text-sm">สำเร็จ: บันทึกข้อมูลเรียบร้อย</span>
+                    <span className="text-green-800 text-sm dark:text-gray-200">สำเร็จ: บันทึกข้อมูลเรียบร้อย</span>
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -1463,7 +1677,7 @@ export default function ShowcasePage() {
                     className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
                   >
                     <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    <span className="text-yellow-800 text-sm">คำเตือน: ตรวจสอบข้อมูลอีกครั้ง</span>
+                    <span className="text-yellow-800 text-sm dark:text-gray-200">คำเตือน: ตรวจสอบข้อมูลอีกครั้ง</span>
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -1472,7 +1686,7 @@ export default function ShowcasePage() {
                     className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg"
                   >
                     <XCircle className="w-5 h-5 text-red-500" />
-                    <span className="text-red-800 text-sm">ข้อผิดพลาด: ไม่สามารถเชื่อมต่อได้</span>
+                    <span className="text-red-800 text-sm dark:text-gray-200">ข้อผิดพลาด: ไม่สามารถเชื่อมต่อได้</span>
                   </motion.div>
                 </div>
               </div>
@@ -1564,8 +1778,8 @@ export default function ShowcasePage() {
 
         {/* Section 5: Visualization */}
         <motion.section id="visualization" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center mr-3">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
@@ -1576,8 +1790,8 @@ export default function ShowcasePage() {
               {/* Chart */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Chart / Graph</h3>
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-4">จำนวนผู้ป่วยรายเดือน</h4>
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">จำนวนผู้ป่วยรายเดือน</h4>
                   <div className="flex items-end space-x-2 h-32">
                     {[65, 45, 78, 92, 56, 89, 73].map((height, index) => (
                       <motion.div
@@ -1590,7 +1804,7 @@ export default function ShowcasePage() {
                       />
                     ))}
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                     <span>ม.ค.</span>
                     <span>ก.พ.</span>
                     <span>มี.ค.</span>
@@ -1605,7 +1819,7 @@ export default function ShowcasePage() {
               {/* Calendar */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Calendar</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium">กรกฎาคม 2025</h4>
                     <div className="flex space-x-1">
@@ -1619,7 +1833,7 @@ export default function ShowcasePage() {
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-center text-xs">
                     {(['อ', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] as string[]).map((day: string, idx: number) => (
-                      <div key={day + idx} className="p-2 font-medium text-gray-600">
+                      <div key={day + idx} className="p-2 font-medium text-gray-600 dark:text-gray-300">
                         {day}
                       </div>
                     ))}
@@ -1652,15 +1866,15 @@ export default function ShowcasePage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg"
                     >
-                      <div className="w-16 text-sm font-medium text-gray-600">
+                      <div className="w-16 text-sm font-medium text-gray-600 dark:text-gray-300">
                         {appointment.time}
                       </div>
                       <div className="w-4 h-4 bg-blue-500 rounded-full flex-shrink-0" />
                       <div className="flex-1">
                         <p className="font-medium">{appointment.patient}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           {appointment.doctor} - {appointment.type}
                         </p>
                       </div>
@@ -1690,8 +1904,8 @@ export default function ShowcasePage() {
 
         {/* Section 6: Authentication */}
         <motion.section id="auth" variants={itemVariants} className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
                 <User className="w-5 h-5 text-white" />
               </div>
@@ -1706,10 +1920,10 @@ export default function ShowcasePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   onSubmit={handleLogin}
-                  className="space-y-4 bg-gray-50 p-6 rounded-lg"
+                  className="space-y-4 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg"
                 >
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       ชื่อผู้ใช้
                     </label>
                     <input
@@ -1722,7 +1936,7 @@ export default function ShowcasePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       รหัสผ่าน
                     </label>
                     <div className="relative">
@@ -1737,7 +1951,7 @@ export default function ShowcasePage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:text-gray-300"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1746,9 +1960,9 @@ export default function ShowcasePage() {
                   <div className="flex items-center justify-between">
                     <label className="flex items-center space-x-2">
                       <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
-                      <span className="text-sm text-gray-600">จดจำการเข้าสู่ระบบ</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">จดจำการเข้าสู่ระบบ</span>
                     </label>
-                    <a href="#" className="text-sm text-blue-500 hover:text-blue-700">
+                    <a href="#" className="text-sm dark:text-gray-200 text-blue-500 hover:text-blue-700">
                       ลืมรหัสผ่าน?
                     </a>
                   </div>
@@ -1778,7 +1992,7 @@ export default function ShowcasePage() {
               {/* User Avatar & Profile */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">User Avatar & Profile</h3>
-                <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg">
                   <div className="flex items-center space-x-4 mb-4">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -1787,8 +2001,8 @@ export default function ShowcasePage() {
                       Dr
                     </motion.div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">นพ.สมชาย วิชาการ</h4>
-                      <p className="text-sm text-gray-600">แพทย์อายุรกรรม</p>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">นพ.สมชาย วิชาการ</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">แพทย์อายุรกรรม</p>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                         <span className="text-xs text-green-600">ออนไลน์</span>
@@ -1797,15 +2011,15 @@ export default function ShowcasePage() {
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                       <Mail className="w-4 h-4" />
                       <span>somchai.doctor@hospital.com</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                       <Phone className="w-4 h-4" />
                       <span>081-234-5678</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                       <MapPin className="w-4 h-4" />
                       <span>แผนกอายุรกรรม ชั้น 3</span>
                     </div>
@@ -1815,14 +2029,14 @@ export default function ShowcasePage() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                      className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm dark:text-gray-200"
                     >
                       แก้ไขโปรไฟล์
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+                      className="px-3 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 text-sm"
                     >
                       ออกจากระบบ
                     </motion.button>
@@ -1837,7 +2051,7 @@ export default function ShowcasePage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-green-100 text-sm">ผู้ป่วยวันนี้</p>
+                        <p className="text-green-100 text-sm dark:text-gray-200">ผู้ป่วยวันนี้</p>
                         <p className="text-xl font-bold">24</p>
                       </div>
                       <Users className="w-6 h-6 text-green-200" />
@@ -1849,7 +2063,7 @@ export default function ShowcasePage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-orange-100 text-sm">นัดหมาย</p>
+                        <p className="text-orange-100 text-sm dark:text-gray-200">นัดหมาย</p>
                         <p className="text-xl font-bold">8</p>
                       </div>
                       <Calendar className="w-6 h-6 text-orange-200" />
@@ -1863,14 +2077,14 @@ export default function ShowcasePage() {
 
         {/* Footer */}
         <motion.footer variants={itemVariants} className="text-center py-8">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Hospital Information System - Component Showcase
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
               ระบบบริหารจัดการโรงพยาบาลที่ทันสมัย ใช้งานง่าย และปลอดภัย
             </p>
-            <div className="flex justify-center space-x-4 text-sm text-gray-500">
+            <div className="flex justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
               <span>© 2025 HIS Development Team</span>
               <span>•</span>
               <span>Built with Next.js, React & TailwindCSS</span>
@@ -1907,28 +2121,28 @@ export default function ShowcasePage() {
                 className="text-center"
               >
                 <div className="text-2xl font-bold text-blue-500">50+</div>
-                <div className="text-sm text-gray-600">Components</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Components</div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="text-center"
               >
                 <div className="text-2xl font-bold text-green-500">6</div>
-                <div className="text-sm text-gray-600">Categories</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Categories</div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="text-center"
               >
                 <div className="text-2xl font-bold text-purple-500">100%</div>
-                <div className="text-sm text-gray-600">Responsive</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Responsive</div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="text-center"
               >
                 <div className="text-2xl font-bold text-orange-500">Modern</div>
-                <div className="text-sm text-gray-600">Design</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Design</div>
               </motion.div>
             </div>
           </div>
