@@ -48,7 +48,7 @@ export default function AuthPage() {
           router.push("/dashboard");
         }, 1000);
       }
-    } catch (e) {
+    } catch {
       setError("เกิดข้อผิดพลาด");
     } finally {
       setLoading(false);
