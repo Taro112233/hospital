@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Bell, 
@@ -37,6 +37,10 @@ import {
   Download,
   Upload
 } from 'lucide-react'
+import { useTheme } from "next-themes"
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 // Animation variants
 const containerVariants = {
@@ -67,6 +71,350 @@ const appointments = [
   { time: '14:00', patient: 'นายวิชัย มั่นคง', doctor: 'นพ.ประยุทธ', type: 'ตรวจหัวใจ' }
 ]
 
+const formSchema = z.object({
+  name: z.string().min(1, 'กรุณากรอกชื่อ').max(32, 'ชื่อยาวเกินไป'),
+  email: z.string().email('รูปแบบอีเมลไม่ถูกต้อง'),
+  password: z.string().min(6, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+function StatefulUIPatternDemo() {
+  const [state, setState] = React.useState<'empty' | 'loading' | 'error' | 'success'>('empty');
+  const [showToast, setShowToast] = React.useState(false);
+
+  React.useEffect(() => {
+    if (state === 'success') {
+      setShowToast(true);
+      const timer = setTimeout(() => setShowToast(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
+
+  return (
+    <div>
+      <div className="flex space-x-2 mb-4">
+        <button onClick={() => setState('empty')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='empty' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Empty</button>
+        <button onClick={() => setState('loading')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='loading' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Loading</button>
+        <button onClick={() => setState('error')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='error' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Error</button>
+        <button onClick={() => setState('success')} className={`px-3 py-1 rounded-lg border text-sm font-medium ${state==='success' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}>Success</button>
+      </div>
+      <div className="border rounded-lg p-6 min-h-[120px] flex items-center justify-center bg-gray-50 dark:bg-gray-800 transition-colors">
+        {state === 'empty' && (
+          <div className="flex flex-col items-center text-gray-400 dark:text-gray-500">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M4 7V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1m-16 0v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7m-16 0h16m-8 4h.01m-.01 4h.01m-.01-2h.01"/></svg>
+            <div className="mt-2 text-sm">ไม่มีข้อมูลในระบบ</div>
+          </div>
+        )}
+        {state === 'loading' && (
+          <div className="flex flex-col items-center text-blue-400">
+            <svg className="animate-spin" width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/></svg>
+            <div className="mt-2 text-sm">กำลังโหลดข้อมูล...</div>
+          </div>
+        )}
+        {state === 'error' && (
+          <div className="flex flex-col items-center text-red-400">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2"/></svg>
+            <div className="mt-2 text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
+            <button onClick={() => setState('loading')} className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium">ลองใหม่</button>
+          </div>
+        )}
+        {state === 'success' && (
+          <div className="flex flex-col items-center text-green-500">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
+            <div className="mt-2 text-sm">โหลดข้อมูลสำเร็จ!</div>
+          </div>
+        )}
+      </div>
+      {showToast && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-fade-in">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/></svg>
+          <span>โหลดข้อมูลสำเร็จ!</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoleBasedUIDemo() {
+  const [role, setRole] = React.useState<'admin' | 'doctor' | 'nurse' | 'clerk'>('admin');
+
+  const sidebarMenus = {
+    admin: [
+      { icon: '🏥', label: 'Dashboard' },
+      { icon: '👥', label: 'User Management' },
+      { icon: '📊', label: 'Reports' },
+      { icon: '⚙️', label: 'Settings' },
+    ],
+    doctor: [
+      { icon: '🏥', label: 'Dashboard' },
+      { icon: '📝', label: 'Patient Records' },
+      { icon: '📅', label: 'Appointments' },
+      { icon: '💊', label: 'Prescriptions' },
+    ],
+    nurse: [
+      { icon: '🏥', label: 'Dashboard' },
+      { icon: '📝', label: 'Patient Care' },
+      { icon: '📅', label: 'Schedules' },
+    ],
+    clerk: [
+      { icon: '🏥', label: 'Dashboard' },
+      { icon: '📝', label: 'Registration' },
+      { icon: '📅', label: 'Appointments' },
+    ],
+  };
+
+  const dashboardMetrics = {
+    admin: [
+      { label: 'Users', value: 120, color: 'bg-blue-500' },
+      { label: 'Revenue', value: '฿1.2M', color: 'bg-green-500' },
+      { label: 'Active Sessions', value: 32, color: 'bg-purple-500' },
+    ],
+    doctor: [
+      { label: 'Patients Today', value: 18, color: 'bg-blue-500' },
+      { label: 'Appointments', value: 6, color: 'bg-green-500' },
+      { label: 'Pending Labs', value: 2, color: 'bg-yellow-500' },
+    ],
+    nurse: [
+      { label: 'Patients Assigned', value: 12, color: 'bg-blue-500' },
+      { label: 'Tasks', value: 8, color: 'bg-green-500' },
+    ],
+    clerk: [
+      { label: 'Registrations', value: 24, color: 'bg-blue-500' },
+      { label: 'Appointments', value: 10, color: 'bg-green-500' },
+    ],
+  };
+
+  return (
+    <div>
+      <div className="flex space-x-2 mb-4">
+        {(['admin', 'doctor', 'nurse', 'clerk'] as const).map((r) => (
+          <button
+            key={r}
+            onClick={() => setRole(r)}
+            className={`px-3 py-1 rounded-lg border text-sm font-medium capitalize ${role===r ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Sidebar */}
+        <div className="w-full md:w-1/3 bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+          <div className="font-semibold mb-2">Sidebar ({role})</div>
+          <ul className="space-y-2">
+            {sidebarMenus[role].map((item, idx) => (
+              <li key={idx} className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {/* Dashboard Metrics */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {dashboardMetrics[role].map((metric, idx) => (
+            <div key={idx} className={`rounded-lg p-4 text-white shadow ${metric.color}`}>
+              <div className="text-xs mb-1 opacity-80">{metric.label}</div>
+              <div className="text-2xl font-bold">{metric.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormValidationDemo() {
+  const { register, handleSubmit, formState: { errors, isSubmitSuccessful }, reset } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    mode: 'onTouched',
+  });
+
+  const onSubmit = (data: FormData) => {
+    setTimeout(() => {
+      reset();
+    }, 2000);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ชื่อ <span className="text-red-500">*</span></label>
+        <input
+          {...register('name')}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          placeholder="กรอกชื่อ"
+        />
+        {errors.name && <div className="text-xs text-red-500 mt-1">{errors.name.message}</div>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">อีเมล <span className="text-red-500">*</span></label>
+        <input
+          {...register('email')}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          placeholder="example@email.com"
+        />
+        {errors.email && <div className="text-xs text-red-500 mt-1">{errors.email.message}</div>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">รหัสผ่าน <span className="text-red-500">*</span></label>
+        <input
+          type="password"
+          {...register('password')}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'}`}
+          placeholder="อย่างน้อย 6 ตัวอักษร"
+        />
+        {errors.password && <div className="text-xs text-red-500 mt-1">{errors.password.message}</div>}
+      </div>
+      <button type="submit" className="w-full py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors">ส่งข้อมูล</button>
+      {isSubmitSuccessful && (
+        <div className="mt-2 text-green-600 dark:text-green-400 text-sm text-center">ส่งข้อมูลสำเร็จ!</div>
+      )}
+    </form>
+  );
+}
+
+function AccessibilityDemo() {
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  // Trap focus in modal
+  React.useEffect(() => {
+    if (modalOpen && modalRef.current) {
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length) focusable[0].focus();
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setModalOpen(false);
+        if (e.key === 'Tab' && modalRef.current) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+            e.preventDefault();
+            (e.shiftKey ? last : first).focus();
+          }
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [modalOpen]);
+
+  return (
+    <div>
+      <div className="flex space-x-2 mb-4">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          aria-label="Open modal"
+          onClick={() => setModalOpen(true)}
+        >
+          เปิด Modal (Enter/Space)
+        </button>
+        <button
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          aria-label="Icon button"
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/></svg>
+        </button>
+      </div>
+      <div className="flex space-x-2">
+        <input
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          placeholder="Tab เพื่อเปลี่ยน focus"
+        />
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
+        >
+          ปุ่มถัดไป
+        </button>
+      </div>
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" aria-modal="true" role="dialog">
+          <div
+            ref={modalRef}
+            className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-sm w-full shadow-lg outline-none"
+            tabIndex={-1}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Modal ตัวอย่าง</h3>
+              <button
+                ref={closeBtnRef}
+                onClick={() => setModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Close modal"
+              >
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2"/></svg>
+              </button>
+            </div>
+            <div className="mb-4 text-gray-700 dark:text-gray-200">Modal นี้สามารถปิดด้วยปุ่ม Esc หรือคลิกปุ่มปิด</div>
+            <button
+              onClick={() => setModalOpen(false)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Close modal"
+            >
+              ปิด Modal
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DataFetchingDemo() {
+  const [state, setState] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [data, setData] = React.useState<string[]>([]);
+
+  const fetchData = () => {
+    setState('loading');
+    setTimeout(() => {
+      // mock: 20% error
+      if (Math.random() < 0.2) {
+        setState('error');
+        setData([]);
+      } else {
+        setData(['ผู้ป่วย A', 'ผู้ป่วย B', 'ผู้ป่วย C']);
+        setState('success');
+      }
+    }, 1500);
+  };
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="border rounded-lg p-6 min-h-[120px] bg-gray-50 dark:bg-gray-800 transition-colors">
+      {state === 'loading' && (
+        <div className="flex items-center space-x-2 text-blue-500">
+          <svg className="animate-spin" width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" opacity="0.2"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4"/></svg>
+          <span>กำลังโหลดข้อมูล...</span>
+        </div>
+      )}
+      {state === 'error' && (
+        <div className="flex flex-col items-center text-red-500">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/><path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2"/></svg>
+          <div className="mt-2 text-sm">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
+          <button onClick={fetchData} className="mt-2 px-3 py-1 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-xs font-medium">ลองใหม่</button>
+        </div>
+      )}
+      {state === 'success' && (
+        <ul className="space-y-2">
+          {data.map((item, idx) => (
+            <li key={idx} className="p-2 rounded bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">{item}</li>
+          ))}
+        </ul>
+      )}
+      {state === 'idle' && (
+        <button onClick={fetchData} className="px-4 py-2 bg-blue-500 text-white rounded-lg">โหลดข้อมูล</button>
+      )}
+    </div>
+  );
+}
+
 export default function ShowcasePage() {
   // States for interactive components
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -84,6 +432,9 @@ export default function ShowcasePage() {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' })
   const [progress, setProgress] = useState(65)
   const [showToast, setShowToast] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
 
   // Component showcase sections
   const showcaseSections = [
@@ -174,6 +525,349 @@ export default function ShowcasePage() {
           </div>
         </div>
       </motion.header>
+
+      {/* Theme Switcher Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mt-8 mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        {!mounted ? (
+          <div className="h-32 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-lg" />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                Theme Switcher
+                <span className="ml-2 text-base font-normal text-gray-500 dark:text-gray-400">(Light / Dark Mode)</span>
+              </h2>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'light' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+                  aria-label="Switch to light mode"
+                >
+                  Light
+                </button>
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'dark' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+                  aria-label="Switch to dark mode"
+                >
+                  Dark
+                </button>
+                <button
+                  onClick={() => setTheme('system')}
+                  className={`px-3 py-1 rounded-lg font-medium border transition-colors ${theme === 'system' ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700'}`}
+                  aria-label="Switch to system mode"
+                >
+                  System
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow">
+                <div className="font-semibold mb-2">Card Example</div>
+                <div className="text-sm">This card changes color based on the theme.</div>
+              </div>
+              <button className="p-4 rounded-lg bg-blue-500 text-white dark:bg-blue-400 dark:text-gray-900 font-semibold shadow transition-colors">
+                Button Example
+              </button>
+              <div className="p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 shadow">
+                <span className="font-mono">Text Example</span>
+                <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">(Try switching theme!)</div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              Components above will adapt their color scheme according to the selected theme.<br/>
+              <span className="italic">(ใช้ next-themes + Tailwind dark mode class)</span>
+            </div>
+          </>
+        )}
+      </motion.section>
+
+      {/* Typography Showcase Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Typography Showcase</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">แสดงตัวอย่างระดับ heading, body, caption, code, quote เพื่อ set พื้นฐาน brand tone และ readability</p>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Heading 1 (h1)</h1>
+            <h2 className="text-3xl font-semibold mb-2">Heading 2 (h2)</h2>
+            <h3 className="text-2xl font-semibold mb-2">Heading 3 (h3)</h3>
+            <h4 className="text-xl font-semibold mb-2">Heading 4 (h4)</h4>
+            <h5 className="text-lg font-semibold mb-2">Heading 5 (h5)</h5>
+            <h6 className="text-base font-semibold mb-2">Heading 6 (h6)</h6>
+          </div>
+          <div>
+            <p className="text-base text-gray-800 dark:text-gray-200 mb-1">Body text: ข้อความปกติสำหรับเนื้อหาในระบบ</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Muted text: ใช้สำหรับข้อความรองหรืออธิบายเพิ่มเติม</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Caption: ใช้สำหรับคำอธิบายสั้น ๆ หรือ label</p>
+          </div>
+          <div>
+            <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm text-blue-600 dark:text-blue-400">code block: const x = 42;</span>
+          </div>
+          <div>
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-950/30 py-2 rounded">
+              "Design is not just what it looks like and feels like. Design is how it works."<br/>
+              <span className="block text-xs text-gray-400 mt-1">— Steve Jobs</span>
+            </blockquote>
+          </div>
+        </div>
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ใช้ Tailwind class เช่น <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-base</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-muted-foreground</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">font-mono</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">italic</code></li>
+            <li>ควรใช้ heading ตามลำดับความสำคัญของเนื้อหา</li>
+            <li>body, caption, muted text ช่วยสร้าง hierarchy และ readability</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Spacing & Grid System Guide Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Spacing & Grid System Guide</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">เทียบ gap-x, gap-y, p, m ที่ใช้ใน Layout และ baseline spacing ที่ควรใช้ เพื่อความสม่ำเสมอ</p>
+        <div className="space-y-8">
+          {/* Baseline Spacing */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Baseline Spacing</h3>
+            <div className="flex flex-wrap gap-4 items-end">
+              {[2, 4, 6, 8, 12].map((n) => (
+                <div key={n} className={`bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded flex flex-col items-center justify-end`}>
+                  <div className={`w-12`} style={{ height: `${n * 4}px` }} />
+                  <span className="text-xs mt-1">p-{n} ({n*4}px)</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">ควรใช้ p-4, p-6, p-8 เป็น baseline spacing สำหรับกล่อง/section</div>
+          </div>
+          {/* Grid & Gap Example */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Grid & Gap Example</h3>
+            <div className="grid grid-cols-3 gap-4 mb-2">
+              {[1,2,3].map((i) => (
+                <div key={i} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center">Box {i}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-8 mb-2">
+              {[1,2,3].map((i) => (
+                <div key={i} className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded p-4 text-center">Box {i}</div>
+              ))}
+            </div>
+            <div className="flex space-x-4 mb-2">
+              <div className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded p-4">gap-x-4</div>
+              <div className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded p-4">gap-x-4</div>
+            </div>
+            <div className="flex flex-col space-y-4">
+              <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded p-4">gap-y-4</div>
+              <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded p-4">gap-y-4</div>
+            </div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">ใช้ <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">gap-4</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">gap-8</code> เพื่อความสม่ำเสมอใน layout</div>
+          </div>
+          {/* Margin Example */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Margin Example</h3>
+            <div className="flex items-end space-x-6">
+              {[2, 4, 8].map((n) => (
+                <div key={n} className={`bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 rounded p-4 mb-${n}`}>mb-{n}</div>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">margin (m, mb, mt, mx, my) ใช้สำหรับเว้นระยะระหว่างกล่อง/section</div>
+          </div>
+        </div>
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ใช้ spacing ที่เป็นเลขคู่ (2, 4, 6, 8, 12) เพื่อความสม่ำเสมอ</li>
+            <li>gap, p, m ของ Tailwind = 4px ต่อ 1 หน่วย</li>
+            <li>ควรใช้ gap-4, p-6, mb-8 เป็น baseline ใน layout</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Color Palette Preview Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Color Palette Preview</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">สีหลัก (primary, accent, muted, foreground) และสีสถานะ (success, error, warning, info) สำหรับการเลือกใช้ class ให้ถูกต้องตาม brand</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          {/* Main Colors */}
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-blue-500 mb-2 border-4 border-blue-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Primary</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-blue-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-purple-500 mb-2 border-4 border-purple-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Accent</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-purple-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mb-2 border-4 border-gray-300 dark:border-gray-600" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Muted</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-gray-200</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 mb-2 border-4 border-gray-200 dark:border-gray-700" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Foreground</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-white</code>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          {/* Status Colors */}
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-green-500 mb-2 border-4 border-green-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Success</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-green-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-red-500 mb-2 border-4 border-red-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Error</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-red-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-yellow-400 mb-2 border-4 border-yellow-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Warning</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-yellow-400</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-blue-400 mb-2 border-4 border-blue-200" />
+            <span className="text-xs text-gray-700 dark:text-gray-200">Info</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">bg-blue-400</code>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          {/* Text Colors */}
+          <div className="flex flex-col items-center">
+            <span className="text-blue-500 font-semibold">text-blue-500</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-blue-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-green-500 font-semibold">text-green-500</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-green-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-red-500 font-semibold">text-red-500</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-red-500</code>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-gray-500 font-semibold">text-gray-500</span>
+            <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded mt-1">text-gray-500</code>
+          </div>
+        </div>
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ใช้ class <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">bg-*</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">text-*</code>, <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">border-*</code> ให้ตรงกับ brand</li>
+            <li>สีหลัก: blue, purple, gray, white</li>
+            <li>สีสถานะ: green (success), red (error), yellow (warning), blue (info)</li>
+            <li>ควรใช้สีอย่างสม่ำเสมอในทั้งระบบ</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Stateful UI Pattern Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Stateful UI Pattern</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">ตัวอย่าง UX pattern สำหรับ Empty, Loading, Error, Success State (เช่น table ที่ไม่มีข้อมูล, skeleton, error, toast)</p>
+        <StatefulUIPatternDemo />
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ควรออกแบบ state เหล่านี้ให้ครบในทุก data-driven UI</li>
+            <li>Empty: แสดงข้อความ/ไอคอนเมื่อไม่มีข้อมูล</li>
+            <li>Loading: ใช้ Skeleton หรือ Spinner</li>
+            <li>Error: แจ้งปัญหาและวิธี retry</li>
+            <li>Success: แจ้งผลลัพธ์สำเร็จ (toast, banner)</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Role-based UI Showcase Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Role-based UI Showcase</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">ตัวอย่างการเปลี่ยน UI ตาม role เช่น Admin, Doctor, Nurse, Clerk (sidebar, dashboard metric)</p>
+        <RoleBasedUIDemo />
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>UI ควรเปลี่ยนตาม role ที่ได้รับจากระบบ auth</li>
+            <li>ตัวอย่าง: sidebar, dashboard, metric, ปุ่ม action</li>
+            <li>ควรแยก logic role-check ใน component หรือ hook</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Form Validation Pattern Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Form Validation Pattern</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">ตัวอย่างฟอร์มที่ validate ด้วย react-hook-form + zod (required, pattern, error message)</p>
+        <FormValidationDemo />
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ควรใช้ schema validation (zod, yup) ร่วมกับ react-hook-form</li>
+            <li>แสดง error message ใต้ field</li>
+            <li>required, pattern mismatch, success state</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Keyboard / Accessibility Interaction Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Keyboard / Accessibility Interaction</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">ตัวอย่างการรองรับ accessibility: Tab/Enter เปลี่ยน focus, Modal ปิดด้วย Esc, ปุ่มมี aria-label</p>
+        <AccessibilityDemo />
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ควรใส่ aria-label ให้ปุ่มที่ไม่มีข้อความ</li>
+            <li>Modal ควรปิดด้วย Esc และโฟกัสควรอยู่ใน modal</li>
+            <li>Tab/Enter ควรเปลี่ยน focus ได้ถูกต้อง</li>
+            <li>ควรมี focus ring ที่ชัดเจน</li>
+          </ul>
+        </div>
+      </motion.section>
+
+      {/* Data Fetching Pattern Showcase Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto mb-12 p-6 rounded-xl shadow-lg bg-white dark:bg-gray-900 transition-colors"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Data Fetching Pattern Showcase</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">ตัวอย่าง component ที่ fetch ข้อมูลจาก API (mock) พร้อม state: loading, success, error</p>
+        <DataFetchingDemo />
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
+          <ul className="list-disc ml-6 space-y-1">
+            <li>ควรแยก state: loading, error, success</li>
+            <li>แสดง skeleton/spinner ระหว่างโหลด</li>
+            <li>error สามารถ retry ได้</li>
+            <li>success แสดงข้อมูลที่ได้</li>
+          </ul>
+        </div>
+      </motion.section>
 
       {/* Main Content */}
       <motion.main 
