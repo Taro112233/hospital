@@ -658,8 +658,12 @@ export default function ShowcasePage() {
     }, 2000)
   }
 
+  if (!mounted) {
+    return <div suppressHydrationWarning />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div suppressHydrationWarning className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <motion.header 
         initial={{ y: -100 }}
@@ -1091,11 +1095,11 @@ export default function ShowcasePage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
         {/* Page Title */}
-        <motion.section variants={itemVariants} className="mb-12 text-center dark:bg-gray-900 dark:text-gray-100">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <motion.section variants={itemVariants} className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Hospital Information System
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Component Showcase สำหรับระบบบริหารจัดการโรงพยาบาล
             <br />
             ออกแบบด้วย Next.js, React, TailwindCSS, Shadcn UI และ Framer Motion
@@ -1103,7 +1107,7 @@ export default function ShowcasePage() {
         </motion.section>
 
         {/* Navigation Menu */}
-        <motion.nav variants={itemVariants} className="mb-12 dark:bg-gray-900">
+        <motion.nav variants={itemVariants} className="mb-12">
           <div className="flex flex-wrap justify-center gap-4">
             {showcaseSections.map((section) => (
               <motion.a
@@ -1121,7 +1125,7 @@ export default function ShowcasePage() {
         </motion.nav>
 
         {/* Section 1: Layout & Navigation */}
-        <motion.section id="layout" variants={itemVariants} className="mb-16 dark:bg-gray-900 dark:text-gray-100">
+        <motion.section id="layout" variants={itemVariants} className="mb-16">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
